@@ -118,6 +118,12 @@ CSettingsEntry *GetGLSettings( const CTString &strRenderer)
 
 extern void ApplyGLSettings(BOOL bForce)
 {
+#ifdef __EMSCRIPTEN__
+  // Shell function calls via function pointers are not supported in WASM
+  // (typed function table signature mismatch). These GL settings only apply
+  // to old Win32 hardware-specific features irrelevant to WebGL anyway.
+  return;
+#endif
   CPrintF( TRANS("\nAutomatic 3D-board preferences adjustment...\n"));
   CDisplayAdapter &da = _pGfx->gl_gaAPI[_pGfx->gl_eCurrentAPI].ga_adaAdapter[_pGfx->gl_iCurrentAdapter];
   CPrintF( TRANS("Detected: %s - %s - %s\n"), (const char *) da.da_strVendor, (const char *) da.da_strRenderer, (const char *) da.da_strVersion);

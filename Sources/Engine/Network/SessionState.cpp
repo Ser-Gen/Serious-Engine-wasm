@@ -616,7 +616,16 @@ void CSessionState::HandleMovers(void)
   }}
 
   // while there are some active movers
+#ifdef EMSCRIPTEN
+  INDEX _ctMoverLoops = 0;
+#endif
   while(!lhActiveMovers.IsEmpty()) {
+#ifdef EMSCRIPTEN
+    _ctMoverLoops++;
+    if (_ctMoverLoops > 100000) {
+      break;
+    }
+#endif
     // get first one
     CMovableEntity *penMoving = LIST_HEAD(lhActiveMovers, CMovableEntity, en_lnInMovers);
     CEntityPointer penCurrent = penMoving;  // just to keep it alive around the loop

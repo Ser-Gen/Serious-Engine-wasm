@@ -51,10 +51,10 @@ extern std::map<void*, int> fnState;
 
 
 
-#define emBegin DBG(CPrintF("  begin: %s %d\n", __func__, fnState[(void*)(__func__)])); switch(fnState[(void*)(__func__)]) { case 0:
-#define emReturn do { DBG(CPrintF("   emreturn: %s %d\n", __func__, __LINE__)); fnState[(void*)(__func__)]=__LINE__;  emscripten_exit_with_live_runtime(); case __LINE__:; } while (0);
-#define emFinish } fnState[(void*)(__func__)]=0;
-#define emDone fnState[(void*)(__func__)]=0;
+#define emBegin static char _fnStateKey; DBG(CPrintF("  begin: %s %d\n", __func__, fnState[(void*)(&_fnStateKey)])); switch(fnState[(void*)(&_fnStateKey)]) { case 0:
+#define emReturn do { DBG(CPrintF("   emreturn: %s %d\n", __func__, __LINE__)); fnState[(void*)(&_fnStateKey)]=__LINE__;  emscripten_exit_with_live_runtime(); case __LINE__:; } while (0);
+#define emFinish } fnState[(void*)(&_fnStateKey)]=0;
+#define emDone fnState[(void*)(&_fnStateKey)]=0;
 #define emQuit emscripten_exit_with_live_runtime();
 #define emArg static
 

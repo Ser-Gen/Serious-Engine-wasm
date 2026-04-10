@@ -135,13 +135,13 @@ endif()
 ## ** RAKE! clean up for SeriousEngine use. Also  **
 ## ** RAKE! need to make this pandora safe.	  **
 # compiler specific flags
-if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
 	# This section and the like are for flags/defines that can be shared between 
 	# c and c++ compile options
 	add_compile_options(-Wall)
 	add_compile_options(-pipe)
 	add_compile_options(-fPIC)
-	if(NOT PANDORA AND NOT PYRA)
+	if(NOT PANDORA AND NOT PYRA AND NOT EMSCRIPTEN)
 		add_compile_options(-march=native)
 	endif()
 	if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm.*")
@@ -169,8 +169,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
             set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -marm -ffast-math")
         elseif(EMSCRIPTEN)
             set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -O3")
-            set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
-            set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4")
+            set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -gsource-map")
+            set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -gsource-map")
         else()
             set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations")
             set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations")
@@ -189,8 +189,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
             set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -marm -ffast-math")
         elseif (EMSCRIPTEN)
             set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -O3")
-            set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g4") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
-            set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -g4")
+            set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -gsource-map") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
+            set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -Os -gsource-map")
         else()
             set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -O3 -fno-unsafe-math-optimizations")
             set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS} -DNDEBUG=1 -D_NDEBUG=1 -g -O3 -fno-unsafe-math-optimizations") ## RAKE! Does -DNDEBUG=1 and -D_NDEBUG=1 mess with RelWithDebInfo?
@@ -1097,11 +1097,13 @@ if(MACOSX)
 endif()
 
 if (EMSCRIPTEN)
+    if(TFE)
     set_target_properties(ssam PROPERTIES LINK_FLAGS "\
       --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/emscripten/pre.js \
       --post-js ${CMAKE_CURRENT_SOURCE_DIR}/emscripten/post.js \
       --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../preload@/ \
       -s ALLOW_MEMORY_GROWTH=1 \
+      -s STACK_SIZE=5242880 \
       -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
       -s LLD_REPORT_UNDEFINED=1 \
       -s USE_WEBGL2=1 \
@@ -1228,6 +1230,166 @@ if (EMSCRIPTEN)
         ]\" \
         --use-preload-cache \
       ")
+    else()
+    # TSE (The Second Encounter) uses EntitiesMP — different entity set from TFE
+    set_target_properties(ssam PROPERTIES LINK_FLAGS "\
+      --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/emscripten/pre.js \
+      --post-js ${CMAKE_CURRENT_SOURCE_DIR}/emscripten/post.js \
+      --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../preload@/ \
+      -s ALLOW_MEMORY_GROWTH=1 \
+      -s STACK_SIZE=5242880 \
+      -s ERROR_ON_UNDEFINED_SYMBOLS=1 \
+      -s LLD_REPORT_UNDEFINED=1 \
+      -s USE_WEBGL2=1 \
+      -s \"EXPORTED_FUNCTIONS=[\
+        '_main',\
+        '_GAME_Create',\
+         '_CAirElemental_DLLClass',\
+         '_CAirShockwave_DLLClass',\
+         '_CAmmoItem_DLLClass',\
+         '_CAmmoPack_DLLClass',\
+         '_CAnimationChanger_DLLClass',\
+         '_CAnimationHub_DLLClass',\
+         '_CAreaMarker_DLLClass',\
+         '_CArmorItem_DLLClass',\
+         '_CBackgroundViewer_DLLClass',\
+         '_CBasicEffect_DLLClass',\
+         '_CBeast_DLLClass',\
+         '_CBigHead_DLLClass',\
+         '_CBlendController_DLLClass',\
+         '_CBloodSpray_DLLClass',\
+         '_CBoneman_DLLClass',\
+         '_CBouncer_DLLClass',\
+         '_CBullet_DLLClass',\
+         '_CCamera_DLLClass',\
+         '_CCameraMarker_DLLClass',\
+         '_CCannonBall_DLLClass',\
+         '_CCannonRotating_DLLClass',\
+         '_CCannonStatic_DLLClass',\
+         '_CChainsawFreak_DLLClass',\
+         '_CCopier_DLLClass',\
+         '_CCounter_DLLClass',\
+         '_CCrateBus_DLLClass',\
+         '_CCrateRider_DLLClass',\
+         '_CCreditsHolder_DLLClass',\
+         '_CDamager_DLLClass',\
+         '_CDebris_DLLClass',\
+         '_CEntityStateDisplay_DLLClass',\
+         '_CDemon_DLLClass',\
+         '_CDestroyableArchitecture_DLLClass',\
+         '_CDevil_DLLClass',\
+         '_CDevilMarker_DLLClass',\
+         '_CDevilProjectile_DLLClass',\
+         '_CDoorController_DLLClass',\
+         '_CDragonman_DLLClass',\
+         '_CEffectMarker_DLLClass',\
+         '_CEffector_DLLClass',\
+         '_CElemental_DLLClass',\
+         '_CEnemyBase_DLLClass',\
+         '_CEnemyCounter_DLLClass',\
+         '_CEnemyDive_DLLClass',\
+         '_CEnemyFly_DLLClass',\
+         '_CEnemyMarker_DLLClass',\
+         '_CEnemyRunInto_DLLClass',\
+         '_CEnemySpawner_DLLClass',\
+         '_CEnvironmentBase_DLLClass',\
+         '_CEnvironmentMarker_DLLClass',\
+         '_CEnvironmentParticlesHolder_DLLClass',\
+         '_CEruptor_DLLClass',\
+         '_CExotechLarva_DLLClass',\
+         '_CExotechLarvaBattery_DLLClass',\
+         '_CExotechLarvaCharger_DLLClass',\
+         '_CEyeman_DLLClass',\
+         '_CFish_DLLClass',\
+         '_CFireworks_DLLClass',\
+         '_CFlame_DLLClass',\
+         '_CFogMarker_DLLClass',\
+         '_CGizmo_DLLClass',\
+         '_CGlobal_DLLClass',\
+         '_CGradientMarker_DLLClass',\
+         '_CGravityMarker_DLLClass',\
+         '_CGravityRouter_DLLClass',\
+         '_CGrunt_DLLClass',\
+         '_CGruntSka_DLLClass',\
+         '_CGuffy_DLLClass',\
+         '_CHazeMarker_DLLClass',\
+         '_CHeadman_DLLClass',\
+         '_CHealthItem_DLLClass',\
+         '_CHudPicHolder_DLLClass',\
+         '_CItem_DLLClass',\
+         '_CKeyItem_DLLClass',\
+         '_CLarvaOffspring_DLLClass',\
+         '_CLight_DLLClass',\
+         '_CLightning_DLLClass',\
+         '_CMarker_DLLClass',\
+         '_CMessageHolder_DLLClass',\
+         '_CMessageItem_DLLClass',\
+         '_CMeteorShower_DLLClass',\
+         '_CMirrorMarker_DLLClass',\
+         '_CModelDestruction_DLLClass',\
+         '_CModelHolder2_DLLClass',\
+         '_CModelHolder3_DLLClass',\
+         '_CModelHolder_DLLClass',\
+         '_CMovingBrush_DLLClass',\
+         '_CMovingBrushMarker_DLLClass',\
+         '_CMusicChanger_DLLClass',\
+         '_CMusicHolder_DLLClass',\
+         '_CNavigationMarker_DLLClass',\
+         '_CParticlesHolder_DLLClass',\
+         '_CPendulum_DLLClass',\
+         '_CPhotoAlbum_DLLClass',\
+         '_CPipebomb_DLLClass',\
+         '_CPlayerActionMarker_DLLClass',\
+         '_CPlayerAnimator_DLLClass',\
+         '_CPlayer_DLLClass',\
+         '_CPlayerMarker_DLLClass',\
+         '_CPlayerView_DLLClass',\
+         '_CPlayerWeaponsEffects_DLLClass',\
+         '_CPlayerWeapons_DLLClass',\
+         '_CPowerUpItem_DLLClass',\
+         '_CProjectile_DLLClass',\
+         '_CPyramidSpaceShip_DLLClass',\
+         '_CPyramidSpaceShipMarker_DLLClass',\
+         '_CReminder_DLLClass',\
+         '_CRollingStone_DLLClass',\
+         '_CSanta_DLLClass',\
+         '_CScorpman_DLLClass',\
+         '_CScrollHolder_DLLClass',\
+         '_CSeriousBomb_DLLClass',\
+         '_CShip_DLLClass',\
+         '_CShipMarker_DLLClass',\
+         '_CShooter_DLLClass',\
+         '_CSoundHolder_DLLClass',\
+         '_CSpawnerProjectile_DLLClass',\
+         '_CSpinner_DLLClass',\
+         '_CStormController_DLLClass',\
+         '_CSummoner_DLLClass',\
+         '_CSummonerMarker_DLLClass',\
+         '_CSwitch_DLLClass',\
+         '_CTacticsChanger_DLLClass',\
+         '_CTacticsHolder_DLLClass',\
+         '_CTeleport_DLLClass',\
+         '_CTerrainEntity_DLLClass',\
+         '_CTextFXHolder_DLLClass',\
+         '_CTimeController_DLLClass',\
+         '_CTouchField_DLLClass',\
+         '_CTrigger_DLLClass',\
+         '_CTwister_DLLClass',\
+         '_CVoiceHolder_DLLClass',\
+         '_CWalker_DLLClass',\
+         '_CWatcher_DLLClass',\
+         '_CWatchPlayers_DLLClass',\
+         '_CWater_DLLClass',\
+         '_CWeaponItem_DLLClass',\
+         '_CWerebull_DLLClass',\
+         '_CWoman_DLLClass',\
+         '_CWorldBase_DLLClass',\
+         '_CWorldLink_DLLClass',\
+         '_CWorldSettingsController_DLLClass'\
+        ]\" \
+        --use-preload-cache \
+      ")
+    endif()
       # only if debug: -g4 --source-map-base http://localhost:5000/cmake-em-build/ \
       # if release probably dont want to use preload cache
     set_target_properties(ssam PROPERTIES COMPILE_FLAGS "-s MAIN_MODULE=1 -s FULL_ES2=1")
@@ -1431,6 +1593,9 @@ if (EMSCRIPTEN)
   set_target_properties(ssam PROPERTIES LINK_DEPENDS "${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk;${PROJECT_BINARY_DIR}/scratch/pre.js;${PROJECT_BINARY_DIR}/scratch/glbug-patch.awk")
 
   get_target_property(SSAM_OUTPUT_NAME ssam OUTPUT_NAME)
+  if(NOT SSAM_OUTPUT_NAME)
+    set(SSAM_OUTPUT_NAME "ssam")
+  endif()
   add_custom_command(
     TARGET ssam
     POST_BUILD

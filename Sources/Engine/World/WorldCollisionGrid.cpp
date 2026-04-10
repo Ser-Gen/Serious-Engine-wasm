@@ -413,6 +413,17 @@ void CWorld::FindEntitiesNearBox(const FLOATaabbox3D &boxNear,
   BoxToGrid(boxNear, iMinX, iMaxX, iMinZ, iMaxZ);
   apenNearEntities.PopAll();
 
+#ifdef EMSCRIPTEN
+  {
+    INDEX rangeX = iMaxX - iMinX + 1;
+    INDEX rangeZ = iMaxZ - iMinZ + 1;
+    if (rangeX > 1000 || rangeZ > 1000) {
+      _pfPhysicsProfile.StopTimer(CPhysicsProfile::PTI_FINDENTITIESNEARBOX);
+      return;
+    }
+  }
+#endif
+
   // for each cell spanned by the box
   {for(INDEX iX=iMinX; iX<=iMaxX; iX++) {
     for(INDEX iZ=iMinZ; iZ<=iMaxZ; iZ++) {
@@ -426,9 +437,18 @@ void CWorld::FindEntitiesNearBox(const FLOATaabbox3D &boxNear,
       }
       _pfPhysicsProfile.IncrementCounter(CPhysicsProfile::PCI_NEAROCCUPIEDCELLSFOUND);
       // for each entity in the cell
+#ifdef EMSCRIPTEN
+      INDEX _dbgEntryCount = 0;
+#endif
       for(INDEX iEntry = wo_pcgCollisionGrid->cg_agcCells[igc].gc_iFirstEntry;
           iEntry>=0;
           iEntry = wo_pcgCollisionGrid->cg_ageEntries[iEntry].ge_iNextEntry) {
+#ifdef EMSCRIPTEN
+        _dbgEntryCount++;
+        if (_dbgEntryCount > 100000) {
+          break;
+        }
+#endif
         CEntity *penEntity = wo_pcgCollisionGrid->cg_ageEntries[iEntry].ge_penEntity;
         // if it is not already found
         if (!(penEntity->en_ulFlags&ENF_FOUNDINGRIDSEARCH)) {

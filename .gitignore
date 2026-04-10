@@ -94,7 +94,10 @@ Sources/SeriousSkaStudio/Scanner.cpp
 *.swp
 *.swo
 
+.DS_Store
 preload/
+preload_tfe/
+preload_tse/
 SaveGame/
 Sources/gl4es/traces/
 Sources/cmake-*

@@ -1008,6 +1008,8 @@ DECFN(ENDGAME)
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 #include <emscripten/html5.h>
+extern void STARTSINGLEGAME();
+extern void INITGAMELOOP();
 void mainloop() {
   if (!_bRunning) {
     CPrintF("--- GAME HAS FINISHED\n");

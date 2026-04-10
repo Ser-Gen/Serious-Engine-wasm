@@ -622,13 +622,17 @@ void CMGHighScore::Render( CDrawPort *pdp)
   strHighScores[0][5] = TRANS("Score");
 
   {for (INDEX i=0; i<HIGHSCORE_COUNT; i++) {
+    if ((int)_pGame->gm_ahseHighScores[i].hse_gdDifficulty == -100) {
+      strHighScores[i+1][1] = "---";
+      continue;
+    }
     switch(_pGame->gm_ahseHighScores[i].hse_gdDifficulty) {
     default:
       ASSERT(FALSE);
-    case (CSessionProperties::GameDifficulty)-100:
-      strHighScores[i+1][1] = "---";
-      continue;
-      break;
+    // case (CSessionProperties::GameDifficulty)-100:
+    //   strHighScores[i+1][1] = "---";
+    //   continue;
+    //   break;
     case CSessionProperties::GD_TOURIST:
       strHighScores[i+1][2] = TRANS("Tourist");
       break;

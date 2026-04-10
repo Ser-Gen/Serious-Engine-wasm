@@ -18,8 +18,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 // ENABLE/DISABLE FUNCTIONS
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
+#include <emscripten/em_js.h>
 #define static 
 #include "Engine/Graphics/Gfx_wrapper_OpenGL.h"
+
+EM_JS(void, em_set_ctVtx, (int ctVtx), {
+  globalThis.ctVtx = ctVtx;
+});
 #else
 #define EMSCRIPTEN_KEEPALIVE
 #endif
@@ -1047,9 +1052,7 @@ static void EMSCRIPTEN_KEEPALIVE ogl_SetVertexArray( GFXVertex4 *pvtx, INDEX ctV
   GFX_ctVertices = ctVtx;
   // bug with emscripten OpenGL ES 2 emulation
   #ifdef EMSCRIPTEN
-  EM_ASM ({
-    globalThis.ctVtx = $0;
-  }, ctVtx);
+  em_set_ctVtx(ctVtx);
   #endif
   _sfStats.StartTimer(CStatForm::STI_GFXAPI);
 
